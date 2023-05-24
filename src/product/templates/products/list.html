@@ -13,12 +13,14 @@
     <form action="" method="get" class="card-header">
         <div class="form-row justify-content-between">
             <div class="col-md-2">
-                <input type="text" name="title" placeholder="Product Title" class="form-control">
+                <input type="text" name="title" placeholder="Product Title" value="{{filters.title}}" class="form-control">
             </div>
             <div class="col-md-2">
                 <select name="variant" id="" class="form-control">
-                    <option selected disabled>--Select A Variant--</option>
-
+                    <option selected value="">--Select A Variant--</option>
+                    {% for variant in variants %}
+                        <option {% if filters.variant == variant %}selected{% endif%}>{{variant}}</option>
+                    {% endfor %}
                 </select>
             </div>
 
@@ -28,12 +30,13 @@
                         <span class="input-group-text">Price Range</span>
                     </div>
                     <input type="text" name="price_from" aria-label="First name" placeholder="From"
-                           class="form-control">
-                    <input type="text" name="price_to" aria-label="Last name" placeholder="To" class="form-control">
+                           class="form-control" value="{{filters.price_from}}">
+                    <input type="text" name="price_to" aria-label="Last name" placeholder="To" class="form-control" value="{{filters.price_to}}">
                 </div>
             </div>
             <div class="col-md-2">
-                <input type="date" name="date" placeholder="Date" class="form-control">
+                <input type="date" name="date" placeholder="Date" class="form-control" value="{{date}}">
+                <!-- value="{{filters.date|date:'Y-m-d'}} -->
             </div>
             <div class="col-md-1">
                 <button type="submit" class="btn btn-primary float-right"><i class="fa fa-search"></i></button>
@@ -55,58 +58,39 @@
                 </thead>
 
                 <tbody>
-                <tr>
-                    <td>1</td>
-                    <td>T-Shirt <br> Created at : 25-Aug-2020</td>
-                    <td>Quality product in low cost</td>
-                    <td>
-                        <dl class="row mb-0" style="height: 80px; overflow: hidden" id="variant">
-                                <dt class="col-sm-3 pb-0">
-                                    XL/ Black/ Full
-                                </dt>
-                                <dd class="col-sm-9">
-                                    <dl class="row mb-0">
-                                        <dd class="col-sm-4 pb-0">Price : 200.0</dd>
-                                        <dd class="col-sm-8 pb-0">InStock : 50.</dd>
-                                    </dl>
-                                </dd>
-                                <dt class="col-sm-3 pb-0">
-                                    XL/ Black/ Half
-                                </dt>
-                                <dd class="col-sm-9">
-                                    <dl class="row mb-0">
-                                        <dd class="col-sm-4 pb-0">Price : 200.0</dd>
-                                        <dd class="col-sm-8 pb-0">InStock : 50.</dd>
-                                    </dl>
-                                </dd>
-                                <dt class="col-sm-3 pb-0">
-                                    L/ Black/ Full
-                                </dt>
-                                <dd class="col-sm-9">
-                                    <dl class="row mb-0">
-                                        <dd class="col-sm-4 pb-0">Price : 200.0</dd>
-                                        <dd class="col-sm-8 pb-0">InStock : 50.</dd>
-                                    </dl>
-                                </dd>
-                                <dt class="col-sm-3 pb-0">
-                                    L/ Black/ Half
-                                </dt>
-                                <dd class="col-sm-9">
-                                    <dl class="row mb-0">
-                                        <dd class="col-sm-4 pb-0">Price : 200.0</dd>
-                                        <dd class="col-sm-8 pb-0">InStock : 50.</dd>
-                                    </dl>
-                                </dd>
-                            </dl>
-                        <button onclick="$('#variant').toggleClass('h-auto')" class="btn btn-sm btn-link">Show more
-                        </button>
-                    </td>
-                    <td>
-                        <div class="btn-group btn-group-sm">
-                            <a href="" class="btn btn-success">Edit</a>
-                        </div>
-                    </td>
-                </tr>
+            
+                    {% for product in products %}
+
+                    <tr>
+                        <td>1</td>
+                        <td>{{product.title}} <br> Created at :{{product.created_at|date:"d-M-Y"}}</td>
+                        <td>{{product.description}} </td>
+                        <td>
+                            <dl class="row mb-0" style="height: 80px; overflow: hidden" id="variant">
+                                {% for variant in product.productvariantprice_set.all%}
+
+                                    <dt class="col-sm-3 pb-0">
+                                        {{variant.product_variant_one.variant_title}}/{{variant.product_variant_two.variant_title}}/{{variant.product_variant_three.variant_title}} 
+                                    </dt>
+                                    <dd class="col-sm-9">
+                                        <dl class="row mb-0">
+                                            <dd class="col-sm-4 pb-0">Price : {{variant.price}}</dd>
+                                            <dd class="col-sm-8 pb-0">InStock : {{variant.stock}}</dd>
+                                        </dl>
+                                    </dd>
+                                {% endfor %}
+                                  
+                                </dl>
+                            <button onclick="$('#variant').toggleClass('h-auto')" class="btn btn-sm btn-link">Show more
+                            </button>
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'product:edit.product' product.id %}" class="btn btn-success">Edit</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
                 </tbody>
 
             </table>
@@ -115,14 +99,56 @@
     </div>
 
     <div class="card-footer">
+        {% with products as pagination %}
         <div class="row justify-content-between">
             <div class="col-md-6">
-                <p>Showing 1 to 10 out of 100</p>
-            </div>
-            <div class="col-md-2">
+                <ul class="pagination justify-content-center flex-wrap">
+                    {% if pagination.has_previous %}
+                    <li class="page-item prev">
+                        <a class="page-link" href="?page={{pagination.previous_page_number}}"><span aria-hidden="true">&laquo;</span></i></a>
+                    </li>
+                   
+                    {% else %}
+                    <li class="page-item prev disabled">
+                        <a class="page-link "><span aria-hidden="true">&laquo;</span></i></a>
+                    </li>
+                    {% endif %}
 
+                  {% for i in pagination.paginator.page_range %}
+                  {% if pagination.number == i %}
+                  <li class="page-item active">
+                    <a class="page-link" href="#"><span>{{ i }} </span></a>
+                  </li>
+
+                  {% else %}
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{i}}"><span>{{ i }} </span></a>
+                  </li>
+                  {% endif %}
+                {% endfor %}
+                {% if pagination.has_next %}
+                  <li class="page-item next">
+                    <a class="page-link" href="?page={{pagination.next_page_number}}"><span aria-hidden="true">&laquo;</span></i></a>
+                  </li>
+                {% else %}
+                <li class="page-item next disabled">
+                  <a class="page-link" href=""><span aria-hidden="true">&raquo;</span></a>
+                </li>
+                {% endif %}
+                 
+                 
+                </ul>
+                
+                    
+                </div>
+        
+            <div class="col-md-4">
+                <p class="px-2"><span class="page">Showing</span> <span>{{ pagination.start_index }} to {{ pagination.end_index }} out of {{ pagination.paginator.count }} </span></p>
             </div>
+            
         </div>
+        {% endwith %}
     </div>
+   
 </div>
 {% endblock %}

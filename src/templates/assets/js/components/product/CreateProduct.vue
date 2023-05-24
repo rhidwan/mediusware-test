@@ -91,7 +91,7 @@
       </div>
     </div>
 
-    <button @click="saveProduct" type="submit" class="btn btn-lg btn-primary">Save</button>
+    <button @submit.prevent="saveProduct" @click="saveProduct" type="submit" class="btn btn-lg btn-primary">Save</button>
     <button type="button" class="btn btn-secondary btn-lg">Cancel</button>
   </section>
 </template>
@@ -190,7 +190,7 @@ export default {
       }
 
 
-      axios.post('/product', product).then(response => {
+      axios.post('/product/api/create/', product).then(response => {
         console.log(response.data);
       }).catch(error => {
         console.log(error);
